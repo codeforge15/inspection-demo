@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient'
 import TaskDetailModal from '../../components/TaskDetailModal'
+
+// --- DataTables 相關引用 ---
 import DataTable from 'datatables.net-react'
+import DT from 'datatables.net-bs5'
+import 'datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+
+DataTable.use(DT)
 
 export default function TasksManagement() {
     const [tasks, setTasks] = useState([])
@@ -9,10 +15,28 @@ export default function TasksManagement() {
     const [viewTask, setViewTask] = useState(null)
     const [viewItems, setViewItems] = useState([])
 
+    const tableOptions = {
+        language: {
+            processing: "處理中...",
+            loadingRecords: "載入中...",
+            lengthMenu: "顯示 _MENU_ 項結果",
+            zeroRecords: "沒有符合的結果",
+            info: "顯示第 _START_ 至 _END_ 項結果，共 _TOTAL_ 項",
+            infoEmpty: "顯示第 0 至 0 項結果，共 0 項",
+            infoFiltered: "(從 _MAX_ 項結果中過濾)",
+            search: "搜尋任務:",
+            paginate: { first: "<<", previous: "<", next: ">", last: ">>" }
+        },
+        order: [[0, 'desc']], // 預設按日期降序
+        autoWidth: false,
+        columnDefs: [
+            { targets: [4], orderable: false } // 操作 (4) 不開放排序
+        ]
+    }
+
     useEffect(() => { fetchTasks() }, [])
 
     const fetchTasks = async () => {
-        // 僅撈取任務執行個體
         const { data } = await supabase
             .from('tasks')
             .select(`*, assets(name, location)`)
@@ -30,17 +54,17 @@ export default function TasksManagement() {
     return (
         <div className="card shadow-sm border-0">
             <div className="card-header bg-white py-3">
-                <h5 className="mb-0 fw-bold text-success">巡檢任務執行進度</h5>
+                <h5 className="mb-0 fw-bold"><i className="bi bi-activity me-2"></i>巡檢任務執行進度</h5>
             </div>
             <div className="card-body">
-                <DataTable className="table table-bordered align-middle">
-                    <thead>
+                <DataTable key={tasks.length} options={tableOptions} className="table table-bordered table-hover align-middle">
+                    <thead className="table-light">
                         <tr>
                             <th>執行日期</th>
                             <th>巡檢對象</th>
                             <th>執行人</th>
                             <th>狀態</th>
-                            <th>操作</th>
+                            <th style={{ width: '120px' }}>操作</th>
                         </tr>
                     </thead>
                     <tbody>

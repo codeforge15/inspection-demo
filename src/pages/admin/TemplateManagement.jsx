@@ -7,16 +7,13 @@ import DataTable from 'datatables.net-react'
 import DT from 'datatables.net-bs5'
 import 'datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 
-// 註冊 Bootstrap 5 樣式
 DataTable.use(DT)
 
 export default function TemplateManagement() {
     const [templates, setTemplates] = useState([])
     const [showModal, setShowModal] = useState(false)
     const [editingTemplate, setEditingTemplate] = useState(null)
-    const [loading, setLoading] = useState(true)
 
-    // DataTables 設定項目
     const tableOptions = {
         language: {
             processing: "處理中...",
@@ -41,19 +38,14 @@ export default function TemplateManagement() {
         ]
     }
 
-    useEffect(() => {
-        fetchTemplates()
-    }, [])
+    useEffect(() => { fetchTemplates() }, [])
 
     const fetchTemplates = async () => {
-        setLoading(true)
         const { data } = await supabase
             .from('templates')
             .select('*')
             .order('created_at', { ascending: false })
-
         if (data) setTemplates(data)
-        setLoading(false)
     }
 
     const handleCreate = () => {
@@ -67,7 +59,7 @@ export default function TemplateManagement() {
     }
 
     const handleDelete = async (id) => {
-        if (!window.confirm('確定要刪除此模板嗎？這將無法復原。')) return
+        if (!window.confirm('確定要刪除此模板嗎？')) return
         const { error } = await supabase.from('templates').delete().eq('id', id)
         if (error) alert(error.message)
         else fetchTemplates()
@@ -76,22 +68,13 @@ export default function TemplateManagement() {
     return (
         <div className="card shadow-sm border-0">
             <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 className="card-title mb-0 fw-bold">
-                    <i className="bi bi-file-earmark-text me-2 text-primary"></i>檢查模板管理
-                </h5>
+                <h5 className="mb-0 fw-bold"><i className="bi bi-file-earmark-text me-2"></i>檢查模板管理</h5>
                 <button className="btn btn-primary btn-sm px-3 shadow-sm" onClick={handleCreate}>
                     <i className="bi bi-plus-lg me-1"></i>建立新模板
                 </button>
             </div>
             <div className="card-body">
-                {/* 使用 DataTable 組件。
-                    key={templates.length} 用於在資料更新時強制 DataTables 重新渲染。
-                */}
-                <DataTable
-                    key={templates.length}
-                    options={tableOptions}
-                    className="table table-bordered table-hover align-middle"
-                >
+                <DataTable key={templates.length} options={tableOptions} className="table table-bordered table-hover align-middle">
                     <thead className="table-light">
                         <tr>
                             <th style={{ width: '80px' }}>示意圖</th>
@@ -105,27 +88,17 @@ export default function TemplateManagement() {
                             <tr key={template.id}>
                                 <td className="text-center">
                                     {template.image_url ? (
-                                        <img
-                                            src={template.image_url}
-                                            alt="icon"
-                                            style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
-                                        />
+                                        <img src={template.image_url} alt="icon" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
                                     ) : (
                                         <i className="bi bi-image text-muted fs-4"></i>
                                     )}
                                 </td>
                                 <td className="fw-bold">{template.name}</td>
-                                <td className="text-muted small">
-                                    {new Date(template.created_at).toLocaleDateString()}
-                                </td>
+                                <td className="text-muted small">{new Date(template.created_at).toLocaleDateString()}</td>
                                 <td>
                                     <div className="btn-group">
-                                        <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(template)}>
-                                            編輯
-                                        </button>
-                                        <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(template.id)}>
-                                            刪除
-                                        </button>
+                                        <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(template)}>編輯</button>
+                                        <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(template.id)}>刪除</button>
                                     </div>
                                 </td>
                             </tr>
@@ -133,13 +106,7 @@ export default function TemplateManagement() {
                     </tbody>
                 </DataTable>
             </div>
-
-            <TemplateFormModal
-                show={showModal}
-                onClose={() => setShowModal(false)}
-                onSuccess={fetchTemplates}
-                initialData={editingTemplate}
-            />
+            <TemplateFormModal show={showModal} onClose={() => setShowModal(false)} onSuccess={fetchTemplates} initialData={editingTemplate} />
         </div>
     )
 }

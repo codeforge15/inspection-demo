@@ -7,16 +7,13 @@ import DataTable from 'datatables.net-react';
 import DT from 'datatables.net-bs5';
 import 'datatables.net-bs5/css/dataTables.bootstrap5.min.css';
 
-// 註冊 Bootstrap 5 樣式
 DataTable.use(DT);
 
 export default function FieldManagement() {
     const [fields, setFields] = useState([])
     const [showModal, setShowModal] = useState(false)
     const [editingItem, setEditingItem] = useState(null)
-    const [loading, setLoading] = useState(true)
 
-    // DataTables 統一配置語系與行為
     const tableOptions = {
         language: {
             processing: "處理中...",
@@ -34,28 +31,22 @@ export default function FieldManagement() {
                 last: ">>"
             }
         },
-        order: [[1, 'asc']], // 預設按場域名稱排序
+        order: [[1, 'asc']], // 按場域名稱排序
         autoWidth: false,
         columnDefs: [
-            { targets: [0, 3], orderable: false } // 縮圖與操作不開放排序
+            { targets: [0, 3], orderable: false } // 縮圖 (0) 與 操作 (3) 不開放排序
         ]
     }
 
-    useEffect(() => {
-        fetchFields()
-    }, [])
+    useEffect(() => { fetchFields() }, [])
 
     const fetchFields = async () => {
-        setLoading(true)
-        // 只撈取 type 為 field 的資料
         const { data } = await supabase
             .from('assets')
             .select('*')
             .eq('type', 'field')
             .order('created_at', { ascending: false })
-
         if (data) setFields(data)
-        setLoading(false)
     }
 
     const handleCreate = () => {
@@ -69,7 +60,7 @@ export default function FieldManagement() {
     }
 
     const handleDelete = async (id) => {
-        if (!window.confirm('確定要刪除此場域嗎？這將無法復原。')) return
+        if (!window.confirm('確定要刪除此場域嗎？')) return
         const { error } = await supabase.from('assets').delete().eq('id', id)
         if (error) alert(error.message)
         else fetchFields()
@@ -78,20 +69,13 @@ export default function FieldManagement() {
     return (
         <div className="card shadow-sm border-0">
             <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 className="card-title mb-0 fw-bold">
-                    <i className="bi bi-geo-alt me-2 text-primary"></i>場域管理
-                </h5>
+                <h5 className="mb-0 fw-bold"><i className="bi bi-geo-alt me-2"></i>場域管理</h5>
                 <button className="btn btn-success btn-sm px-3 shadow-sm" onClick={handleCreate}>
                     <i className="bi bi-plus-lg me-1"></i>新增場域
                 </button>
             </div>
             <div className="card-body">
-                {/* 使用 key={fields.length} 確保資料變動時 DataTable 正確重繪 */}
-                <DataTable
-                    key={fields.length}
-                    options={tableOptions}
-                    className="table table-bordered table-hover align-middle"
-                >
+                <DataTable key={fields.length} options={tableOptions} className="table table-bordered table-hover align-middle">
                     <thead className="table-light">
                         <tr>
                             <th style={{ width: '100px' }}>縮圖</th>
@@ -105,11 +89,7 @@ export default function FieldManagement() {
                             <tr key={item.id}>
                                 <td className="text-center">
                                     {item.image_url ? (
-                                        <img
-                                            src={item.image_url}
-                                            alt="field"
-                                            style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }}
-                                        />
+                                        <img src={item.image_url} alt="field" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
                                     ) : (
                                         <i className="bi bi-building text-muted fs-3"></i>
                                     )}
@@ -118,12 +98,8 @@ export default function FieldManagement() {
                                 <td>{item.location || <span className="text-muted small">未填寫</span>}</td>
                                 <td>
                                     <div className="btn-group">
-                                        <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(item)}>
-                                            編輯
-                                        </button>
-                                        <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(item.id)}>
-                                            刪除
-                                        </button>
+                                        <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(item)}>編輯</button>
+                                        <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(item.id)}>刪除</button>
                                     </div>
                                 </td>
                             </tr>
@@ -131,14 +107,7 @@ export default function FieldManagement() {
                     </tbody>
                 </DataTable>
             </div>
-
-            <AssetFormModal
-                show={showModal}
-                onClose={() => setShowModal(false)}
-                onSuccess={fetchFields}
-                initialData={editingItem}
-                fixedType="field"
-            />
+            <AssetFormModal show={showModal} onClose={() => setShowModal(false)} onSuccess={fetchFields} initialData={editingItem} fixedType="field" />
         </div>
     )
 }
